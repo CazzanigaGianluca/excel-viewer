@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { read, utils } from 'xlsx';
 
 export const App = () => {
-  const [excelData, setExcelData] = useState<unknown>();
+  const [excelData, setExcelData] = useState<{rows: any[], columns: {key: string; name: string}[]}>();
+  const [highlight, setHighlight] = useState<boolean>(false);
   useEffect(() => {
     readFile();
   }, []);
@@ -24,25 +25,37 @@ export const App = () => {
     setExcelData({rows, columns});
   }
 
+  const renderTextWithHiglight = (columnData: any): string | JSX.Element => {
+    if(columnData.toString().includes('Bill')) {
+      const indexWord = columnData.indexOf('Bill');
+      const otherWords = columnData.split('Bill').join('');
+      return (
+        <>
+          <span className='bg-yellow-500'>{columnData.toString().substring(4, indexWord)}</span>{otherWords}
+        </>
+      );
+    }
+    return columnData;
+  }
+
   return (
     <div>
-      <pre>{JSON.stringify(excelData)}</pre>
-      <br />
+      <button className='border border-gray-400 rounded p-2 mb-4' onClick={() => setHighlight(!highlight)}>Highlight "Bill"</button>
       <table className='min-w-min border border-gray-400'>
         <thead className='bg-gray-300 border border-gray-400'>
           <tr>
             <th className='border border-gray-400'></th>
-            {excelData.columns.map((column) => (
+            {excelData?.columns.map((column) => (
               <th className='border border-gray-400' key={column.key}>{column.name}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {excelData.rows.map((row, i) => (
+          {excelData?.rows.map((row, i) => (
             <tr key={i}>
               <th className='bg-gray-300 border border-gray-400'>{i + 1}</th>
-              {row.map((col, j) => (
-                <th className='border border-gray-400 font-normal' key={j}>{col}</th>
+              {row.map((col: any, j: number) => (
+                <th className='border border-gray-400 font-normal' key={j}>{highlight ? renderTextWithHiglight(col) : col}</th>
               ))}
             </tr>
           ))}
